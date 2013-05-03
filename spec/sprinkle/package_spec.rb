@@ -9,7 +9,11 @@ describe Sprinkle::Package do
     @opts = { }
   end
 
-  before :each do
+    after do
+      clear_repository
+    end
+
+  def clear_repository
     Sprinkle::Package::PACKAGES.clear
   end
 
@@ -107,6 +111,10 @@ CODE
   end
 
   describe 'helper method' do
+
+    before do
+      clear_repository
+    end
 
     it 'should added new packages to the global package hash' do
       pkg = package @name do; end
@@ -211,13 +219,13 @@ CODE
       pkg.installers[1].class.should == Sprinkle::Installers::Gem
     end
 
-		it 'should optionally accept a runner installer' do
-			pkg = package @name do
-				runner 'obscure_installer_by_custom_cmd'
-			end
-			pkg.should respond_to(:runner)
-			pkg.installers.first.class.should == Sprinkle::Installers::Runner
-		end
+    it 'should optionally accept a runner installer' do
+      pkg = package @name do
+        runner 'obscure_installer_by_custom_cmd'
+      end
+      pkg.should respond_to(:runner)
+      pkg.installers.first.class.should == Sprinkle::Installers::Runner
+    end
   end
 
   describe 'with a source installer' do
@@ -244,9 +252,11 @@ CODE
   end
 
   describe 'with an apt installer' do
+
     it 'should forward block to installer superclass' do
       check_block_forwarding_on(:apt)
     end
+
   end
 
   describe 'with an rpm installer' do
@@ -280,6 +290,9 @@ CODE
     end
 
     describe 'with an installer' do
+    after do
+      clear_repository
+    end
 
       before do
         @package.installers = [ @installer ]
@@ -422,7 +435,7 @@ CODE
       @c.should_receive(:instance).any_number_of_times.and_return(@ci)
       @d.should_receive(:instance).any_number_of_times.and_return(@di)
       @e.should_receive(:instance).any_number_of_times.and_return(@ei)
-      
+
       @a.tree.flatten.should == [ @d, @c, @b, @a ]
       @b.tree.flatten.should == [ @d, @c, @b ]
       @c.tree.flatten.should == [ @d, @c ]
@@ -464,7 +477,6 @@ CODE
 
     it 'should maintain a depth count of how deep the hierarchy is' do
       instance=mock
-      p @b
       @b.should_receive(:instance).and_return(instance)
       instance.should_receive(:tree).with(2).and_return([@b])
       @a.tree do; end
