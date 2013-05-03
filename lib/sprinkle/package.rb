@@ -96,7 +96,8 @@ module Sprinkle
 
     def package(name, metadata = {}, &block)
       package = Package.new(name, metadata, &block)
-      PACKAGES[name] = package
+      PACKAGES[name] ||= []
+      PACKAGES[name] << package
 
       if package.provides
         (PACKAGES[package.provides] ||= []) << package
