@@ -95,15 +95,7 @@ module Sprinkle
         @packages.each do |p, args|
           cloud_info "  * requires package #{p}"
 
-          package = Sprinkle::Package::PACKAGES[p].first
-          unless args.first.nil?
-            options = args.first
-            version = options[:version]
-            package = Sprinkle::Package::PACKAGES[p].select { |pkg| version == pkg.version } if version
-          else
-            # raise "Package version is ambiguous for key: #{p}" if Sprinkle::Package::PACKAGES[p].length > 1
-          end
-
+          package = Sprinkle::Package::PACKAGES.find p, args.first
           raise "Package definition not found for key: #{p}" unless package
           package = select_package(p, package) if package.is_a? Array # handle virtual package selection
           # get an instance of the package and pass our config options
@@ -135,7 +127,7 @@ module Sprinkle
               menu.prompt = "Multiple choices exist for virtual package #{name}"
               menu.choices *packages.collect(&:to_s)
             end
-            package = Sprinkle::Package::PACKAGES[package]
+            package = Sprinkle::Package::PACKAGES.find package
           end
 
           cloud_info "Selecting #{package.to_s} for virtual package #{name}"

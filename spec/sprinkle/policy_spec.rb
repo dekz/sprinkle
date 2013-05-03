@@ -116,13 +116,17 @@ describe Sprinkle::Policy do
 
       it 'should automatically select a concrete package implementation for a virtual one when there exists only one possible selection' do
         @policy = policy :virtual, :roles => :app do; requires :xyz; end
-        Sprinkle::Package::PACKAGES[:xyz].should == [ @b ]
+
+        Sprinkle::Package::PACKAGES.find(:xyz).should == @b
+        #Sprinkle::Package::PACKAGES[:xyz].should == [ @b ]
       end
 
       it 'should ask the user for the concrete package implementation to use for a virtual one when more than one possible choice exists' do
         @policy = policy :virtual, :roles => :app do; requires :abc; end
-        Sprinkle::Package::PACKAGES[:abc].should include(@c)
-        Sprinkle::Package::PACKAGES[:abc].should include(@d)
+
+        Sprinkle::Package::PACKAGES.find(:abc).should include(@c)
+        Sprinkle::Package::PACKAGES.find(:abc).should include(@c)
+        Sprinkle::Package::PACKAGES.find(:abc).should include(@d)
         $terminal.should_receive(:choose).and_return(:c)
       end
 

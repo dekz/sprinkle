@@ -92,15 +92,14 @@ module Sprinkle
   # FIXME: Should probably document recommendations.
   #++
   module Package
-    PACKAGES = {}
+    PACKAGES = PackageRepository.new
 
     def package(name, metadata = {}, &block)
       package = Package.new(name, metadata, &block)
-      PACKAGES[name] ||= []
-      PACKAGES[name] << package
+      PACKAGES.add name, package
 
       if package.provides
-        (PACKAGES[package.provides] ||= []) << package
+        PACKAGES.add package.provides, package
       end
 
       package
@@ -255,7 +254,7 @@ module Sprinkle
         packages = []
 
         @recommends.each do |dep, config|
-          package = PACKAGES[dep]
+          package = PACKAGES.find dep
           next unless package # skip missing recommended packages as they're allowed to not exist
           package=package.instance(config)
           block.call(self, package, depth) if block
@@ -263,7 +262,7 @@ module Sprinkle
         end
 
         @dependencies.each do |dep, config|
-          package = PACKAGES[dep]
+          package = PACKAGES.find dep
           package = select_package(dep, package) if package.is_a? Array
           
           raise "Package definition not found for key: #{dep}" unless package
@@ -275,7 +274,7 @@ module Sprinkle
         packages << self
 
         @optional.each do |dep, config|
-          package = PACKAGES[dep]
+          package = PACKAGES.find dep
           next unless package # skip missing optional packages as they're allow to not exist
           package = package.instance(config)
           block.call(self, package, depth) if block
@@ -308,7 +307,7 @@ module Sprinkle
               menu.prompt = "Multiple choices exist for virtual package #{name}"
               menu.choices *packages.collect(&:to_s)
             end
-            package = Sprinkle::Package::PACKAGES[package]
+            package = Sprinkle::Package::PACKAGES.find package
           end
 
           cloud_info "Selecting #{package.to_s} for virtual package #{name}"

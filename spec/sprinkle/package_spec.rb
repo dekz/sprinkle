@@ -9,6 +9,10 @@ describe Sprinkle::Package do
     @opts = { }
   end
 
+  before :each do
+    Sprinkle::Package::PACKAGES.clear
+  end
+
   # Kind of a messy way to do this but it works and DRYs out
   # the specs. Checks to make sure an installer is receiving
   # the block passed to it throught the package block.
@@ -106,12 +110,30 @@ CODE
 
     it 'should added new packages to the global package hash' do
       pkg = package @name do; end
-      Sprinkle::Package::PACKAGES[@name].should == pkg
+      Sprinkle::Package::PACKAGES.find(@name).should == pkg
+    end
+
+    it 'determine the correct version to return' do
+      pkg = package @name do; end
+      pkg2 = package @name do; version '0.0.1'; end
+      Sprinkle::Package::PACKAGES.find(@name, :version => '0.0.1').should == pkg2
+    end
+
+    it 'should not find a version when it doesn\'t exist' do
+      pkg = package @name do; end
+      pkg2 = package @name do; version '0.0.1'; end
+      Sprinkle::Package::PACKAGES.find(@name, :version => '0.0.2').should == nil
+    end
+
+    it 'should add the new package to the provides list if specified and return an array if there are many items' do
+      pkg = package @name, :provides => :database do; end
+      pkg2 = package @name, :provides => :database do; end
+      Sprinkle::Package::PACKAGES.find(:database).last.should == pkg2
     end
 
     it 'should add the new package to the provides list if specified' do
       pkg = package @name, :provides => :database do; end
-      Sprinkle::Package::PACKAGES[:database].last.should == pkg
+      Sprinkle::Package::PACKAGES.find(:database).should == pkg
     end
 
   end
@@ -442,6 +464,7 @@ CODE
 
     it 'should maintain a depth count of how deep the hierarchy is' do
       instance=mock
+      p @b
       @b.should_receive(:instance).and_return(instance)
       instance.should_receive(:tree).with(2).and_return([@b])
       @a.tree do; end
